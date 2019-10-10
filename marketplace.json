@@ -2,8 +2,8 @@
   "label": "Sankey Visualization",
   "category_label": "Plug-ins",
   "branding": {
-    "image_uri": "https://wwwstatic-a.lookercdn.com/blocks/logos/aws.png",
-    "tagline": "A Sankey diagram is used to depict flow over a series of sets."
+    "image_uri": "https://looker.com/assets/img/images/blocks/screenshots/viz/sankey/sankey.gif",
+    "tagline": "Sankey diagrams describe the flow of certain quantities through a system, with the width of a particular arrow being proportional to the magnitude of the flow."
   },
 
     "constants": {
