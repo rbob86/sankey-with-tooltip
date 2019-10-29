@@ -2,7 +2,7 @@
   "label": "Sankey Visualization",
   "category_label": "Plug-ins",
   "branding": {
-    "image_uri": "https://looker.com/assets/img/images/blocks/screenshots/viz/sankey/sankey.gif",
+    "image_uri": fileURL("visualization-screenshots/sankey_icon.png"),
     "tagline": "Sankey diagrams describe the flow of certain quantities through a system, with the width of a particular arrow being proportional to the magnitude of the flow."
   },
 
