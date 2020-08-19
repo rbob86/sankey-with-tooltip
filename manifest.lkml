@@ -12,6 +12,6 @@ constant: VIS_ID {
 
 visualization: {
   id: "@{VIS_ID}"
-  url: "https://looker-custom-viz-a.lookercdn.com/master/sankey.js"
+  url: "https://marketplace-api.looker.com/viz-dist/sankey.js"
   label: "@{VIS_LABEL}"
 }
