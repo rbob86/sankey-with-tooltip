@@ -75,6 +75,12 @@ const vis: Sankey = {
     const dimensions = queryResponse.fields.dimension_like
     const measure = queryResponse.fields.measure_like[0]
 
+    // config object is not set properly on DB-next 
+    // unless a user interacts with the config. Just catch the case for now.
+    if(typeof config.label_type === "undefined") {
+      config.label_type = 'name'
+    }
+
     //  The standard d3.ScaleOrdinal<string, {}>, causes error
     // `no-inferred-empty-object-type  Explicit type parameter needs to be provided to the function call`
     // https://stackoverflow.com/questions/31564730/typescript-with-d3js-with-definitlytyped
