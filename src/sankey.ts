@@ -1,5 +1,6 @@
 import { sankey, sankeyLinkHorizontal, sankeyLeft } from 'd3-sankey'
 import { handleErrors, d3 } from './utils'
+import { format as SSF } from 'SSF'
 
 import {
   Cell,
@@ -74,6 +75,13 @@ const vis: Sankey = {
 
     const dimensions = queryResponse.fields.dimension_like
     const measure = queryResponse.fields.measure_like[0]
+    const val_format = measure.value_format
+
+    // config object is not set properly on DB-next 
+    // unless a user interacts with the config. Just catch the case for now.
+    if(typeof config.label_type === "undefined") {
+      config.label_type = 'name'
+    }
 
     //  The standard d3.ScaleOrdinal<string, {}>, causes error
     // `no-inferred-empty-object-type  Explicit type parameter needs to be provided to the function call`
@@ -256,7 +264,7 @@ const vis: Sankey = {
           case 'name':
             return d.name
           case 'name_value':
-            return `${d.name} (${d.value})`
+            return `${d.name} (${!!val_format ? SSF(val_format, d.value) : d.value})`
           default:
             return ''
         }
