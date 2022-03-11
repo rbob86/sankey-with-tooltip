@@ -170,7 +170,18 @@ const vis: Sankey = {
       .data(graph.links)
       .enter().append('path')
       .attr('class', 'link')
-      .attr('d', function (d: any) { return 'M' + -10 + ',' + -10 + sankeyLinkHorizontal()(d) })
+      .attr('d', function (d: any) { 
+        // Prevents exact horizontal sankey links from disappearing.
+        // See for reference https://github.com/d3/d3-sankey/issues/28
+        const path = sankeyLinkHorizontal()(d)
+        const match = path ? path.match(/,([^C]+)C/) : null
+        if (match && path && match.length === 2) {
+          const replacementValue = +match[1] + 0.01
+          const fixedPath = path.replace(match[1], '' + replacementValue)
+          return 'M' + -10 + ',' + -10 + fixedPath  
+        }
+        return 'M' + -10 + ',' + -10 + path 
+      })
       .style('opacity', 0.4)
       .attr('stroke-width', function (d: Cell) { return Math.max(1, d.width) })
       .on('mouseenter', function (this: any, d: Cell) {
