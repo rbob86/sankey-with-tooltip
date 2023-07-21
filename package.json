@@ -28,6 +28,7 @@
     "uglifyjs-webpack-plugin": "^1.2.5",
     "webpack": "4.41.2",
     "webpack-cli": "^3.3.10",
+    "jest": "^29.6.1",
     "webpack-dev-server": "3.9.0"
   },
   "dependencies": {
@@ -38,7 +39,6 @@
     "@types/d3-sankey": "^0.7.4",
     "babel-loader": "^8.0.6",
     "d3-sankey": "^0.10.4",
-    "jest": "^29.6.1",
     "react": "^16.8.3",
     "react-dom": "^16.7.0",
     "react-responsive-carousel": "^3.1.51",
