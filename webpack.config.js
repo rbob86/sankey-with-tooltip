@@ -21,6 +21,10 @@ var webpackConfig = {
     rules: [
       {test: /\.js$/, loader: 'babel-loader'},
       {test: /\.ts$/, loader: 'ts-loader'},
+      {
+        test: /\.css$/i,
+        use: ['style-loader', 'css-loader'],
+      },
     ],
   },
   performance: {

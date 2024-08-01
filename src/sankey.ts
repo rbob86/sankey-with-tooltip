@@ -1,6 +1,6 @@
-import {sankey, sankeyLinkHorizontal, sankeyLeft} from 'd3-sankey';
-import {handleErrors, d3} from './utils';
-import {format as SSF} from 'ssf';
+import { sankey, sankeyLinkHorizontal, sankeyLeft } from 'd3-sankey';
+import { handleErrors, d3 } from './utils';
+import { format as SSF } from 'ssf';
 
 import {
   Cell,
@@ -16,10 +16,11 @@ declare var LookerCharts: LookerChartUtils;
 
 interface Sankey extends VisualizationDefinition {
   svg?: any;
+  tooltip?: any;
 }
 
 const vis: Sankey = {
-  id: 'sankey', // id/label not required, but nice for testing and keeping manifests in sync
+  id: 'sankey',
   label: 'Sankey',
   options: {
     color_range: {
@@ -42,7 +43,7 @@ const vis: Sankey = {
       display: 'select',
       label: 'Label Type',
       type: 'string',
-      values: [{Name: 'name'}, {'Name (value)': 'name_value'}],
+      values: [{ Name: 'name' }, { 'Name (value)': 'name_value' }],
     },
     show_null_points: {
       type: 'boolean',
@@ -50,7 +51,6 @@ const vis: Sankey = {
       default: true,
     },
   },
-  // Set up the initial state of the visualization
   create(element, config) {
     element.innerHTML = `
       <style>
@@ -58,11 +58,26 @@ const vis: Sankey = {
       .link {
         transition: 0.5s opacity;
       }
+      .d3-tooltip {
+        position: absolute;
+        background: #272D32;
+        padding: 10px 5px;
+        border-radius: 5px;
+        display: none;
+        font-family: Roboto;
+        font-size: 12px;
+        pointer-events: none;
+        z-index: 9999;
+        color: #ffffff;
+      }
       </style>
     `;
     this.svg = d3.select(element).append('svg');
+
+    // Create a tooltip div
+    this.tooltip = d3.select(element).append('div')
+      .attr('class', 'd3-tooltip')
   },
-  // Render in response to the data or settings changing
   updateAsync(data, element, config, queryResponse, details, doneRendering) {
     if (
       !handleErrors(this, queryResponse, {
@@ -89,15 +104,10 @@ const vis: Sankey = {
     const measure = queryResponse.fields.measure_like[0];
     const val_format = measure.value_format;
 
-    // config object is not set properly on DB-next
-    // unless a user interacts with the config. Just catch the case for now.
     if (typeof config.label_type === 'undefined') {
       config.label_type = 'name';
     }
 
-    //  The standard d3.ScaleOrdinal<string, {}>, causes error
-    // `no-inferred-empty-object-type  Explicit type parameter needs to be provided to the function call`
-    // https://stackoverflow.com/questions/31564730/typescript-with-d3js-with-definitlytyped
     const color = d3
       .scaleOrdinal<string[], string[]>()
       .range(config.color_range || vis.options.color_range.default);
@@ -113,7 +123,6 @@ const vis: Sankey = {
         [width - 1, height - 6],
       ]);
 
-    // TODO: Placeholder until @types catches up with sankey
     const newSankeyProps: any = sankeyInst;
     newSankeyProps.nodeSort(null);
 
@@ -139,7 +148,6 @@ const vis: Sankey = {
     const nodes = d3.set();
 
     data.forEach(function (d: any) {
-      // variable number of dimensions
       const path: any[] = [];
       for (const dim of dimensions) {
         if (d[dim.name].value === null && !config.show_null_points) break;
@@ -156,7 +164,7 @@ const vis: Sankey = {
 
         nodes.add(source);
         nodes.add(target);
-        // Setup drill links
+
         const drillLinks: Link[] = [];
         for (const key in d) {
           if (d[key].links) {
@@ -171,6 +179,7 @@ const vis: Sankey = {
           source: source,
           target: target,
           value: +d[measure.name].value,
+          html: d[measure.name].html
         });
       });
     });
@@ -190,14 +199,14 @@ const vis: Sankey = {
 
     sankeyInst(graph);
 
+    const tooltip = this.tooltip;
+
     link = link
       .data(graph.links)
       .enter()
       .append('path')
       .attr('class', 'link')
       .attr('d', function (d: any) {
-        // Prevents exact horizontal sankey links from disappearing.
-        // See for reference https://github.com/d3/d3-sankey/issues/28
         const path = sankeyLinkHorizontal()(d);
         const match = path ? path.match(/,([^C]+)C/) : null;
         if (match && path && match.length === 2) {
@@ -219,11 +228,32 @@ const vis: Sankey = {
           if (p === d.target) return 1;
           return 0.5;
         });
+
+        const tooltipContent = d.html ?? d.value
+
+        // Show tooltip
+        tooltip.style('display', 'block')
+          .html(tooltipContent);
+      })
+      .on('mousemove', function () {
+        const [x, y] = [d3.event.pageX, d3.event.pageY];
+        const tooltipWidth = tooltip.node().offsetWidth;
+        const tooltipHeight = tooltip.node().offsetHeight;
+        const containerWidth = window.innerWidth; // Or use the container's width if not full screen
+        const containerHeight = window.innerHeight; // Or use the container's height if not full screen
+        
+        // Adjust the x position if the tooltip goes beyond the container's right edge
+        const xOffset = x + tooltipWidth > containerWidth ? -tooltipWidth - 10 : 10;
+
+        // Adjust the y position if the tooltip goes beyond the container's bottom edge
+        const yOffset = y + tooltipHeight > containerHeight ? -tooltipHeight - 10 : 10;
+
+        tooltip.style('left', (x + xOffset) + 'px')
+          .style('top', (y + yOffset) + 'px');
       })
       .on('click', function (this: any, d: Cell) {
-        // Add drill menu event
         const coords = d3.mouse(this);
-        const event: object = {pageX: coords[0], pageY: coords[1]};
+        const event: object = { pageX: coords[0], pageY: coords[1] };
         LookerCharts.Utils.openDrillMenu({
           links: d.drillLinks,
           event: event,
@@ -232,11 +262,11 @@ const vis: Sankey = {
       .on('mouseleave', function (d: Cell) {
         d3.selectAll('.node').style('opacity', 1);
         d3.selectAll('.link').style('opacity', 0.4);
+        tooltip.style('display', 'none');
       });
 
     // gradients https://bl.ocks.org/micahstubbs/bf90fda6717e243832edad6ed9f82814
     link.style('stroke', function (d: Cell, i: number) {
-      // make unique gradient ids
       const gradientID = 'gradient' + i;
 
       const startColor = color(d.source.name.replace(/ .*/, ''));
@@ -249,8 +279,8 @@ const vis: Sankey = {
       linearGradient
         .selectAll('stop')
         .data([
-          {offset: '10%', color: startColor},
-          {offset: '90%', color: stopColor},
+          { offset: '10%', color: startColor },
+          { offset: '90%', color: stopColor },
         ])
         .enter()
         .append('stop')
