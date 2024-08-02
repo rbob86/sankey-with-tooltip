@@ -64,7 +64,7 @@ const vis: Sankey = {
         padding: 10px 5px;
         border-radius: 5px;
         display: none;
-        font-family: Roboto;
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
         font-size: 12px;
         pointer-events: none;
         z-index: 9999;
